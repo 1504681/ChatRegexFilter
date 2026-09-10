@@ -1,0 +1,19 @@
+{
+  "plugins": [
+    "com.chatregexfilter.ChatRegexFilterPlugin"
+  ],
+  "displayName": "Chat Regex Filter",
+  "author": "1504681",
+  "description": "Hides any chatbox line that matches your regular expressions, whatever chat type it came from",
+  "tags": [
+    "chat",
+    "filter",
+    "regex",
+    "hide",
+    "spam",
+    "clan",
+    "broadcast",
+    "mute"
+  ],
+  "version": "1.0.0"
+}
