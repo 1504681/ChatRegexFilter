@@ -4,11 +4,20 @@ import java.awt.Color;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
+import net.runelite.client.config.ConfigSection;
 
 @ConfigGroup(ChatRegexFilterConfig.GROUP)
 public interface ChatRegexFilterConfig extends Config
 {
 	String GROUP = "chatregexfilter";
+
+	@ConfigSection(
+		name = "Debug",
+		description = "Tools for checking what the patterns match",
+		position = 10,
+		closedByDefault = true
+	)
+	String debugSection = "debug";
 
 	@ConfigItem(
 		keyName = "patterns",
@@ -68,8 +77,9 @@ public interface ChatRegexFilterConfig extends Config
 	@ConfigItem(
 		keyName = "debugMode",
 		name = "Mark instead of hide",
-		description = "Debug: leave matching lines in the chatbox, prefixed with an X and coloured, so you can see what would be hidden",
-		position = 5
+		description = "Leave matching lines in the chatbox, prefixed with an X and coloured, so you can see what would be hidden",
+		position = 0,
+		section = debugSection
 	)
 	default boolean debugMode()
 	{
@@ -80,10 +90,23 @@ public interface ChatRegexFilterConfig extends Config
 		keyName = "debugColor",
 		name = "Mark colour",
 		description = "Colour used for marked lines when Mark instead of hide is on",
-		position = 6
+		position = 1,
+		section = debugSection
 	)
 	default Color debugColor()
 	{
 		return Color.RED;
+	}
+
+	@ConfigItem(
+		keyName = "copyMenu",
+		name = "Right-click copy",
+		description = "Add \"Copy raw text\" and \"Copy filter text\" to the right-click menu on any chatbox line, to paste into your patterns",
+		position = 2,
+		section = debugSection
+	)
+	default boolean copyMenu()
+	{
+		return false;
 	}
 }
