@@ -1,6 +1,7 @@
 package com.chatregexfilter;
 
 import com.google.inject.Provides;
+import java.awt.Color;
 import javax.inject.Inject;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
@@ -15,6 +16,8 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.util.ColorUtil;
+import net.runelite.client.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -119,10 +122,25 @@ public class ChatRegexFilterPlugin extends Plugin
 		}
 
 		String candidate = LineFilter.normalize(sender, message, config.stripTags());
-		if (current.matches(candidate))
+		if (!current.matches(candidate))
+		{
+			return;
+		}
+		if (config.debugMode())
+		{
+			objectStack[objectStackSize - 1] = markLine(message, config.debugColor());
+		}
+		else
 		{
 			intStack[intStackSize - 3] = 0;
 		}
+	}
+
+	// "X message" in one colour. Existing tags are removed so a </col> in the middle can't reset the colour
+	static String markLine(String message, Color color)
+	{
+		String plain = Text.removeTags(message == null ? "" : message);
+		return ColorUtil.wrapWithColorTag("X " + plain, color);
 	}
 
 	private void rebuild(boolean announce)

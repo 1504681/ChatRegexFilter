@@ -1,5 +1,6 @@
 package com.chatregexfilter;
 
+import java.awt.Color;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
@@ -62,5 +63,27 @@ public interface ChatRegexFilterConfig extends Config
 	default boolean reportInvalid()
 	{
 		return true;
+	}
+
+	@ConfigItem(
+		keyName = "debugMode",
+		name = "Mark instead of hide",
+		description = "Debug: leave matching lines in the chatbox, prefixed with an X and coloured, so you can see what would be hidden",
+		position = 5
+	)
+	default boolean debugMode()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "debugColor",
+		name = "Mark colour",
+		description = "Colour used for marked lines when Mark instead of hide is on",
+		position = 6
+	)
+	default Color debugColor()
+	{
+		return Color.RED;
 	}
 }

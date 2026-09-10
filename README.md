@@ -14,6 +14,8 @@ The built-in Chat Filter plugin only looks at player chat and a handful of game 
 
 **Include sender name** (off by default) matches against `Name: message` instead of just the message, so `^SomePlayer: ` hides everything a particular player says while `Zezima: .*buying` only hides their buying spam. The name has chat icons stripped when tags are stripped.
 
+**Mark instead of hide** (off by default) is a debug mode. Matching lines stay in the chatbox but are rewritten as `X` followed by the message, all in one colour (red by default, set with **Mark colour**), so you can see exactly what your patterns would remove before you trust them. Turn it off again and the same lines disappear.
+
 Timestamps are never part of what your patterns see. RuneLite's Timestamp plugin adds them in a separate step, and if some other plugin has already glued a `[12:34]` or `[1:05 PM]` onto the front of the text it is removed before matching. So `^` always means the start of the actual message, with or without timestamps turned on.
 
 Changing any setting redraws the chatbox, so lines already on screen appear or disappear straight away. Turning the plugin off shows everything again. Nothing is deleted; hidden lines are still in the chat history and come back the moment the pattern is removed.
@@ -34,7 +36,7 @@ On Windows use `.\gradlew.bat run`. That starts a normal RuneLite client in deve
 
 ## Changelog
 
-1.0.0: first release.
+1.0.0: first release. Regex hiding for every chat type, sender matching, and a mark-instead-of-hide debug mode.
 
 ## License
 
