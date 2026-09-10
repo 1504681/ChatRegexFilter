@@ -198,12 +198,12 @@ public class ChatRegexFilterPlugin extends Plugin
 		String sender = config.includeSender() && node != null ? node.getName() : null;
 		String filterText = LineFilter.normalize(sender, raw, config.stripTags());
 
-		client.createMenuEntry(1)
+		client.getMenu().createMenuEntry(1)
 			.setOption(COPY_FILTER)
 			.setTarget("")
 			.setType(MenuAction.RUNELITE)
 			.onClick(e -> copyToClipboard(filterText));
-		client.createMenuEntry(1)
+		client.getMenu().createMenuEntry(1)
 			.setOption(COPY_RAW)
 			.setTarget("")
 			.setType(MenuAction.RUNELITE)
