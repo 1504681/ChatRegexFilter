@@ -24,20 +24,6 @@ Timestamps are never part of what your patterns see. RuneLite's Timestamp plugin
 
 Changing any setting redraws the chatbox, so lines already on screen appear or disappear straight away. Turning the plugin off shows everything again. Nothing is deleted; hidden lines are still in the chat history and come back the moment the pattern is removed.
 
-## Running it locally
-
-You need a JDK, 11 or newer. Gradle comes with the wrapper.
-
-```
-git clone https://github.com/1504681/ChatRegexFilter.git
-cd ChatRegexFilter
-./gradlew run
-```
-
-On Windows use `.\gradlew.bat run`. That starts a normal RuneLite client in developer mode with the plugin already loaded. Log in, search the plugin list for Regex and add a pattern.
-
-`./gradlew build` compiles and runs the unit tests, which is what the Plugin Hub CI does. `./gradlew installPlugin` puts a jar in `~/.runelite/externalPlugins` if you'd rather sideload. From an IDE, run `ChatRegexFilterLauncher` with `-ea`.
-
 ## Changelog
 
 1.0.0: first release. Regex hiding for every chat type, sender matching, a mark-instead-of-hide debug mode, and right-click copy of raw or filter text.
