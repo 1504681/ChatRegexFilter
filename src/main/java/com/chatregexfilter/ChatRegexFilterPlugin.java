@@ -4,6 +4,8 @@ import com.google.inject.Provides;
 import java.awt.Color;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
+import java.util.ArrayList;
+import java.util.List;
 import javax.inject.Inject;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
@@ -30,13 +32,13 @@ import org.slf4j.LoggerFactory;
 
 @PluginDescriptor(
 	name = "Chat Regex Filter",
-	description = "Hides any chatbox line that matches your regular expressions, whatever chat type it came from",
-	tags = {"chat", "filter", "regex", "hide", "spam", "clan", "broadcast", "mute"}
+	description = "Hides or rewrites any chatbox line that matches your regular expressions, whatever chat type it came from",
+	tags = {"chat", "filter", "regex", "hide", "spam", "clan", "broadcast", "mute", "replace"}
 )
 public class ChatRegexFilterPlugin extends Plugin
 {
 	// keep in sync with build.gradle
-	public static final String VERSION = "1.0.0";
+	public static final String VERSION = "1.1.0";
 
 	private static final Logger log = LoggerFactory.getLogger(ChatRegexFilterPlugin.class);
 
@@ -63,6 +65,7 @@ public class ChatRegexFilterPlugin extends Plugin
 	private ChatMessageManager chatMessageManager;
 
 	private volatile LineFilter filter = new LineFilter("", true);
+	private volatile Replacer replacer = new Replacer("", true);
 
 	@Provides
 	ChatRegexFilterConfig provideConfig(ConfigManager configManager)
@@ -82,6 +85,7 @@ public class ChatRegexFilterPlugin extends Plugin
 	protected void shutDown()
 	{
 		filter = new LineFilter("", true);
+		replacer = new Replacer("", true);
 		clientThread.invoke(client::refreshChat);
 		log.info("Chat Regex Filter stopped");
 	}
@@ -106,7 +110,8 @@ public class ChatRegexFilterPlugin extends Plugin
 			return;
 		}
 		LineFilter current = filter;
-		if (current.isEmpty())
+		Replacer rewrite = replacer;
+		if (current.isEmpty() && rewrite.isEmpty())
 		{
 			return;
 		}
@@ -138,7 +143,16 @@ public class ChatRegexFilterPlugin extends Plugin
 		String candidate = LineFilter.normalize(sender, message, config.stripTags());
 		if (!current.matches(candidate))
 		{
-			return;
+			String replaced = rewrite.apply(message, config.stripTags());
+			if (replaced == null)
+			{
+				return;
+			}
+			if (!Replacer.isBlank(replaced))
+			{
+				objectStack[objectStackSize - 1] = replaced;
+				return;
+			}
 		}
 		if (config.debugMode())
 		{
@@ -246,17 +260,21 @@ public class ChatRegexFilterPlugin extends Plugin
 	private void rebuild(boolean announce)
 	{
 		LineFilter next = new LineFilter(config.patterns(), config.caseInsensitive());
+		Replacer nextReplacer = new Replacer(config.replacements(), config.caseInsensitive());
 		filter = next;
-		for (String error : next.getErrors())
+		replacer = nextReplacer;
+		List<String> errors = new ArrayList<>(next.getErrors());
+		errors.addAll(nextReplacer.getErrors());
+		for (String error : errors)
 		{
 			log.warn("Chat Regex Filter: invalid pattern, {}", error);
 		}
-		if (announce && config.reportInvalid() && !next.getErrors().isEmpty()
+		if (announce && config.reportInvalid() && !errors.isEmpty()
 			&& client.getGameState() == GameState.LOGGED_IN)
 		{
-			String summary = "Chat Regex Filter: " + next.getErrors().size()
-				+ (next.getErrors().size() == 1 ? " pattern is" : " patterns are")
-				+ " not valid regex and will be ignored (" + next.getErrors().get(0) + ")";
+			String summary = "Chat Regex Filter: " + errors.size()
+				+ (errors.size() == 1 ? " pattern is" : " patterns are")
+				+ " not valid regex and will be ignored (" + errors.get(0) + ")";
 			chatMessageManager.queue(QueuedMessage.builder()
 				.type(ChatMessageType.CONSOLE)
 				.runeLiteFormattedMessage(summary)

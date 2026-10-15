@@ -1,6 +1,6 @@
 # Chat Regex Filter
 
-RuneLite plugin that hides chatbox lines matching regular expressions you write. It runs on every line the chatbox draws, whatever the source: public, private, clan, friends chat, group ironman chat, game messages, broadcasts, examines, trade and login notifications, all of it. If a line contains a match it simply isn't shown.
+RuneLite plugin that hides or rewrites chatbox lines matching regular expressions you write. It runs on every line the chatbox draws, whatever the source: public, private, clan, friends chat, group ironman chat, game messages, broadcasts, examines, trade and login notifications, all of it. If a line contains a match it simply isn't shown.
 
 The built-in Chat Filter plugin only looks at player chat and a handful of game message types, and it skips friends and clan members. This one has no exceptions.
 
@@ -8,7 +8,9 @@ The built-in Chat Filter plugin only looks at player chat and a handful of game 
 
 **Patterns** is a text box with one regular expression per line. Java regex syntax. A line is hidden if any pattern is found anywhere in it, so `bank sale` hides "Huge BANK SALE at ge" and `^You have completed .* lap\.$` hides agility lap messages. Blank lines and lines starting with `#` are ignored. Invalid patterns are skipped and reported in the chatbox (and the client log) so a typo in one line never disables the rest.
 
-**Ignore case** is on by default.
+**Replacements** rewrites text instead of hiding the line. One rule per line: `pattern, replacement`. Nothing after the comma (or `""`) removes the match, so `\bgz\b,` turns "Bob: gz on 99" into "Bob: on 99" and `lol, haha` swaps the word. The split is on the last comma, so commas inside the regex like `a{1,3},` still work; wrap the replacement in quotes to keep a comma or spaces in it (`x, ", "`). A line with no comma just removes the match. The replacement is plain text (`$` is literal). Rules run in order on the message only, never the sender name or timestamp, and with **Strip formatting tags** on they skip over colour and icon tags so those survive. If a rule removes everything, the line is hidden. Hiding patterns are checked first.
+
+**Ignore case** is on by default and applies to both lists.
 
 **Strip formatting tags** (on by default) removes `<col=...>` and `<img=...>` tags before matching, so patterns see the plain text you read on screen rather than the raw markup.
 
@@ -25,6 +27,8 @@ Timestamps are never part of what your patterns see. RuneLite's Timestamp plugin
 Changing any setting redraws the chatbox, so lines already on screen appear or disappear straight away. Turning the plugin off shows everything again. Nothing is deleted; hidden lines are still in the chat history and come back the moment the pattern is removed.
 
 ## Changelog
+
+1.1.0: Replacements list: replace or remove the matched text instead of hiding the whole line.
 
 1.0.0: first release. Regex hiding for every chat type, sender matching, a mark-instead-of-hide debug mode, and right-click copy of raw or filter text.
 

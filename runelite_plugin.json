@@ -4,7 +4,7 @@
   ],
   "displayName": "Chat Regex Filter",
   "author": "1504681",
-  "description": "Hides any chatbox line that matches your regular expressions, whatever chat type it came from",
+  "description": "Hides or rewrites any chatbox line that matches your regular expressions, whatever chat type it came from",
   "tags": [
     "chat",
     "filter",
@@ -13,7 +13,8 @@
     "spam",
     "clan",
     "broadcast",
-    "mute"
+    "mute",
+    "replace"
   ],
-  "version": "1.0.0"
+  "version": "1.1.0"
 }
