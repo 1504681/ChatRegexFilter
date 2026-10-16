@@ -12,9 +12,12 @@ import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.MenuAction;
 import net.runelite.api.MessageNode;
+import net.runelite.api.FontTypeFace;
 import net.runelite.api.Point;
+import net.runelite.api.ScriptID;
 import net.runelite.api.events.MenuOpened;
 import net.runelite.api.events.ScriptCallbackEvent;
+import net.runelite.api.events.ScriptPostFired;
 import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.callback.ClientThread;
@@ -47,6 +50,7 @@ public class ChatRegexFilterPlugin extends Plugin
 
 	// the chatbox scroll area holds four dynamic children per line: sender, message, clan name, clan rank
 	private static final int WIDGETS_PER_LINE = 4;
+	private static final int SENDER_WIDGET_OFFSET = 0;
 	private static final int MESSAGE_WIDGET_OFFSET = 1;
 
 	private static final String COPY_RAW = "Copy raw text";
@@ -161,6 +165,69 @@ public class ChatRegexFilterPlugin extends Plugin
 		else
 		{
 			intStack[intStackSize - 3] = 0;
+		}
+	}
+
+	// sender names are drawn from the message's own name, not the filter callback, so rewrite the built widgets.
+	// Only the text changes; the widget's op name (what right-click Add friend/Report use) is left alone
+	@Subscribe
+	public void onScriptPostFired(ScriptPostFired event)
+	{
+		if (event.getScriptId() != ScriptID.BUILD_CHATBOX || !config.replaceNames())
+		{
+			return;
+		}
+		Replacer rewrite = replacer;
+		if (rewrite.isEmpty())
+		{
+			return;
+		}
+		Widget scrollArea = client.getWidget(InterfaceID.Chatbox.SCROLLAREA);
+		if (scrollArea == null)
+		{
+			return;
+		}
+		Widget[] children = scrollArea.getDynamicChildren();
+		if (children == null)
+		{
+			return;
+		}
+		for (int start = 0; start + WIDGETS_PER_LINE <= children.length; start += WIDGETS_PER_LINE)
+		{
+			Widget sender = children[start + SENDER_WIDGET_OFFSET];
+			if (sender == null || sender.isHidden())
+			{
+				continue;
+			}
+			String label = sender.getText();
+			if (label == null || label.isEmpty())
+			{
+				continue;
+			}
+			String replaced = rewrite.applyToName(label, config.stripTags());
+			if (replaced == null)
+			{
+				continue;
+			}
+			FontTypeFace font = sender.getFont();
+			int shift = font == null ? 0 : font.getTextWidth(label) - font.getTextWidth(replaced);
+			sender.setText(replaced);
+			if (shift == 0)
+			{
+				continue;
+			}
+			// the build script placed the rest of the line after the name at its old width, so pull it in
+			sender.setOriginalWidth(Math.max(0, sender.getOriginalWidth() - shift));
+			sender.revalidate();
+			for (int i = start; i < start + WIDGETS_PER_LINE; i++)
+			{
+				Widget other = children[i];
+				if (other != null && other != sender && other.getOriginalX() > sender.getOriginalX())
+				{
+					other.setOriginalX(other.getOriginalX() - shift);
+					other.revalidate();
+				}
+			}
 		}
 	}
 

@@ -8,7 +8,9 @@ The built-in Chat Filter plugin only looks at player chat and a handful of game 
 
 **Patterns** is a text box with one regular expression per line. Java regex syntax. A line is hidden if any pattern is found anywhere in it, so `bank sale` hides "Huge BANK SALE at ge" and `^You have completed .* lap\.$` hides agility lap messages. Blank lines and lines starting with `#` are ignored. Invalid patterns are skipped and reported in the chatbox (and the client log) so a typo in one line never disables the rest.
 
-**Replacements** rewrites text instead of hiding the line. One rule per line: `pattern, replacement`. Nothing after the comma (or `""`) removes the match, so `\bgz\b,` turns "Bob: gz on 99" into "Bob: on 99" and `lol, haha` swaps the word. The split is on the last comma, so commas inside the regex like `a{1,3},` still work; wrap the replacement in quotes to keep a comma or spaces in it (`x, ", "`). A line with no comma just removes the match. The replacement is plain text (`$` is literal). Rules run in order on the message only, never the sender name or timestamp, and with **Strip formatting tags** on they skip over colour and icon tags so those survive. If a rule removes everything, the line is hidden. Hiding patterns are checked first.
+**Replacements** rewrites text instead of hiding the line. One rule per line: `pattern, replacement`. Nothing after the comma (or `""`) removes the match, so `\bgz\b,` turns "gz on 99" into "on 99" and `lol, haha` swaps the word. `$1` to `$9` put back a captured group, so `(.)\1{2,}, $1$1` cuts any run of three or more of the same character down to two ("Gzzzz@@@@@@" becomes "Gzz@@"). Any other `$` is literal. The split is on the last comma, so commas inside the regex like `a{1,3},` still work; wrap the replacement in quotes to keep a comma or spaces in it (`x, ", "`). A line with no comma just removes the match. Rules run in order on the message, never the timestamp, and with **Strip formatting tags** on they skip over colour and icon tags so those survive. If a rule removes everything, the line is hidden. Hiding patterns are checked first, against the original text.
+
+**Replace in names** (off by default) runs the same rules on the sender name in front of each line, so `\b(iron|osrs|chunk)\b,` turns "Iron Bob:" into "Bob:". It only changes what is drawn: right-click Add friend, Message and Report still use the real name, and **Include sender name** still matches the real name.
 
 **Ignore case** is on by default and applies to both lists.
 
@@ -28,7 +30,7 @@ Changing any setting redraws the chatbox, so lines already on screen appear or d
 
 ## Changelog
 
-1.1.0: Replacements list: replace or remove the matched text instead of hiding the whole line.
+1.1.0: Replacements list: replace or remove the matched text (with `$1` groups) instead of hiding the whole line, optionally in sender names too.
 
 1.0.0: first release. Regex hiding for every chat type, sender matching, a mark-instead-of-hide debug mode, and right-click copy of raw or filter text.
 

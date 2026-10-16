@@ -9,7 +9,7 @@ import java.util.regex.PatternSyntaxException;
 import net.runelite.client.util.Text;
 
 /**
- * Parses "pattern, replacement" rules and rewrites the text of a chat line.
+ * Parses "pattern, replacement" rules and rewrites the text of a chat line or a sender name.
  * Pure Java, no client access, so it can be unit tested.
  */
 public class Replacer
@@ -17,6 +17,9 @@ public class Replacer
 	private static final Pattern TAG = Pattern.compile("<[^>]*>");
 	private static final Pattern QUOTED_REPLACEMENT = Pattern.compile(",\\s*\"(.*)\"$");
 	private static final Pattern EXTRA_SPACES = Pattern.compile(" {2,}");
+	// spaces left at either end of the visible text, possibly behind leading or trailing tags
+	private static final Pattern LEADING_SPACE = Pattern.compile("^((?:<[^>]*>)*) +");
+	private static final Pattern TRAILING_SPACE = Pattern.compile(" +((?:<[^>]*>)*)$");
 
 	static final class Rule
 	{
@@ -55,14 +58,23 @@ public class Replacer
 					continue;
 				}
 				int flags = caseInsensitive ? Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE : 0;
+				Pattern pattern;
 				try
 				{
-					parsed.add(new Rule(Pattern.compile(parts[0], flags), parts[1]));
+					pattern = Pattern.compile(parts[0], flags);
 				}
 				catch (PatternSyntaxException e)
 				{
 					problems.add("replacement line " + lineNumber + ": " + e.getDescription());
+					continue;
 				}
+				String replacement = toJavaReplacement(parts[1], pattern.matcher("").groupCount());
+				if (replacement == null)
+				{
+					problems.add("replacement line " + lineNumber + ": $ refers to a group the pattern doesn't have");
+					continue;
+				}
+				parsed.add(new Rule(pattern, replacement));
 			}
 		}
 		rules = Collections.unmodifiableList(parsed);
@@ -84,6 +96,37 @@ public class Replacer
 			return new String[]{line, ""};
 		}
 		return new String[]{line.substring(0, comma).trim(), line.substring(comma + 1).trim()};
+	}
+
+	// $1..$9 insert a captured group, everything else is literal. Null when a $n has no matching group
+	static String toJavaReplacement(String replacement, int groupCount)
+	{
+		StringBuilder out = new StringBuilder();
+		for (int i = 0; i < replacement.length(); i++)
+		{
+			char c = replacement.charAt(i);
+			boolean groupRef = c == '$' && i + 1 < replacement.length() && Character.isDigit(replacement.charAt(i + 1));
+			if (groupRef)
+			{
+				int group = replacement.charAt(i + 1) - '0';
+				if (group > groupCount)
+				{
+					return null;
+				}
+				out.append('$').append(group);
+				i++;
+			}
+			// escaped digits stop Java reading "$1" followed by "2" as group 12
+			else if (c == '$' || c == '\\' || Character.isDigit(c))
+			{
+				out.append('\\').append(c);
+			}
+			else
+			{
+				out.append(c);
+			}
+		}
+		return out.toString();
 	}
 
 	public List<String> getErrors()
@@ -114,7 +157,27 @@ public class Replacer
 		{
 			return null;
 		}
-		return prefix + EXTRA_SPACES.matcher(result).replaceAll(" ").trim();
+		return prefix + tidy(result);
+	}
+
+	/**
+	 * Rewrites a chatbox sender label such as "<img=2>Iron Bob:" or "From Bob:". The trailing colon is kept out of
+	 * reach so $ means the end of the name. Returns null when nothing changed
+	 */
+	public String applyToName(String label, boolean skipTags)
+	{
+		if (label == null || rules.isEmpty())
+		{
+			return null;
+		}
+		String suffix = label.endsWith(":") ? ":" : "";
+		String name = label.substring(0, label.length() - suffix.length());
+		String result = skipTags ? replaceOutsideTags(name) : replaceAll(name);
+		if (result.equals(name))
+		{
+			return null;
+		}
+		return tidy(result) + suffix;
 	}
 
 	// true when a rewritten line has no visible text left and should be hidden instead
@@ -123,11 +186,18 @@ public class Replacer
 		return message == null || Text.removeTags(message).trim().isEmpty();
 	}
 
+	private static String tidy(String text)
+	{
+		text = EXTRA_SPACES.matcher(text).replaceAll(" ");
+		text = LEADING_SPACE.matcher(text).replaceFirst("$1");
+		return TRAILING_SPACE.matcher(text).replaceFirst("$1");
+	}
+
 	private String replaceAll(String text)
 	{
 		for (Rule rule : rules)
 		{
-			text = rule.pattern.matcher(text).replaceAll(Matcher.quoteReplacement(rule.replacement));
+			text = rule.pattern.matcher(text).replaceAll(rule.replacement);
 		}
 		return text;
 	}

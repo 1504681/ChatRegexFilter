@@ -31,10 +31,36 @@ public class ReplacerTest
 	}
 
 	@Test
-	public void replacesLiterally()
+	public void dollarIsLiteralUnlessGroup()
 	{
-		Replacer replacer = new Replacer("gp, $1 coins", true);
-		assertEquals("500 $1 coins", replacer.apply("500 gp", true));
+		assertEquals("500 $ coins", new Replacer("gp, $ coins", true).apply("500 gp", true));
+		assertEquals("a\\b", new Replacer("x, \\", true).apply("axb", true));
+		assertEquals(1, new Replacer("gp, $1 coins", true).getErrors().size());
+	}
+
+	@Test
+	public void collapsesRepeatedCharacters()
+	{
+		Replacer replacer = new Replacer("(.)\\1{2,}, $1$1", true);
+		assertEquals("Gzz@@", replacer.apply("Gzzzz@@@@@@@@@", true));
+		assertNull(replacer.apply("gzz", true));
+	}
+
+	@Test
+	public void groupFollowedByDigit()
+	{
+		assertEquals("ab2", new Replacer("(a)x, $1b2", true).apply("ax", true));
+	}
+
+	@Test
+	public void rewritesNames()
+	{
+		Replacer replacer = new Replacer("\\b(iron|osrs|chunk)\\b,", true);
+		assertEquals("<img=2>Bob:", replacer.applyToName("<img=2>Iron Bob:", true));
+		assertEquals("Bob:", replacer.applyToName("Bob Chunk:", true));
+		assertEquals("From Bob:", replacer.applyToName("From osrs Bob:", true));
+		assertNull(replacer.applyToName("Zezima:", true));
+		assertEquals("Bob:", new Replacer(" Iron$,", true).applyToName("Bob Iron:", true));
 	}
 
 	@Test
@@ -49,6 +75,7 @@ public class ReplacerTest
 	{
 		Replacer replacer = new Replacer("col,", true);
 		assertEquals("<col=ff0000>red here</col>", replacer.apply("<col=ff0000>red col here</col>", true));
+		assertEquals("<col=ff0000>red</col>", replacer.apply("<col=ff0000>red col</col>", true));
 		assertEquals("[12:34] hi", new Replacer("^spam ", true).apply("[12:34] spam hi", true));
 	}
 

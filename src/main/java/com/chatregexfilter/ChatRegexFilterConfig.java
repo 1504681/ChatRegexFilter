@@ -42,10 +42,21 @@ public interface ChatRegexFilterConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "replaceNames",
+		name = "Replace in names",
+		description = "Also apply the replacements to the sender name shown in front of each line. Display only, right-click options still use the real name",
+		position = 2
+	)
+	default boolean replaceNames()
+	{
+		return false;
+	}
+
+	@ConfigItem(
 		keyName = "caseInsensitive",
 		name = "Ignore case",
 		description = "Match regardless of upper or lower case",
-		position = 2
+		position = 3
 	)
 	default boolean caseInsensitive()
 	{
@@ -56,7 +67,7 @@ public interface ChatRegexFilterConfig extends Config
 		keyName = "stripTags",
 		name = "Strip formatting tags",
 		description = "Remove <col=...> and <img=...> tags before matching, so patterns see the plain text you read in the chatbox",
-		position = 3
+		position = 4
 	)
 	default boolean stripTags()
 	{
@@ -67,7 +78,7 @@ public interface ChatRegexFilterConfig extends Config
 		keyName = "includeSender",
 		name = "Include sender name",
 		description = "Match against \"Name: message\" instead of just the message, so a pattern can target a particular player",
-		position = 4
+		position = 5
 	)
 	default boolean includeSender()
 	{
@@ -78,7 +89,7 @@ public interface ChatRegexFilterConfig extends Config
 		keyName = "reportInvalid",
 		name = "Report invalid patterns",
 		description = "Print a chatbox message when a line in the pattern list is not a valid regular expression",
-		position = 5
+		position = 6
 	)
 	default boolean reportInvalid()
 	{
