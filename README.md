@@ -30,7 +30,9 @@ Changing any setting redraws the chatbox, so lines already on screen appear or d
 
 ## Changelog
 
-1.1.0: Replacements list: replace or remove the matched text (with `$1` groups) instead of hiding the whole line, optionally in sender names too.
+1.2.0: `$1` to `$9` in replacements (e.g. collapse repeated characters), and **Replace in names** to apply the rules to sender names.
+
+1.1.0: Replacements list: replace or remove the matched text instead of hiding the whole line.
 
 1.0.0: first release. Regex hiding for every chat type, sender matching, a mark-instead-of-hide debug mode, and right-click copy of raw or filter text.
 

@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 public class ChatRegexFilterPlugin extends Plugin
 {
 	// keep in sync with build.gradle
-	public static final String VERSION = "1.1.0";
+	public static final String VERSION = "1.2.0";
 
 	private static final Logger log = LoggerFactory.getLogger(ChatRegexFilterPlugin.class);
 
